@@ -19,7 +19,7 @@ export default async function handler(req, res) {
         messages: [{
           role: 'user',
           content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType, data: image } },
+            { type: 'image', source: { type: 'base64', media_type: (mediaType||'image/jpeg').replace('jpg','jpeg'), data: image } },
             { type: 'text', text: prompt }
           ]
         }]
