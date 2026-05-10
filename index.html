@@ -33,21 +33,28 @@ async function handleOCRFile(file){
   reader.onload=async(e)=>{
     const dataUrl=e.target.result;
     document.getElementById("ocrPreview").innerHTML=`<img src="${dataUrl}" style="max-width:100%;max-height:100px;border-radius:6px;object-fit:contain">`;
-    console.log("D:",dataUrl.substring(0,50));const base64=dataUrl.split(",")[1];
-    const mediaType=(file.type||"image/jpeg").replace("jpg","jpeg");
+    const base64=dataUrl.split(",")[1];
+    const mediaType=file.type||"image/jpeg";
     try{
-      const res=await fetch("/api/ocr",{
+      const res=await fetch("https://api.anthropic.com/v1/messages",{
         method:"POST",
-        headers:{"Content-Type":"application/json","anthropic-version":"2023-06-01"},
-        body:JSON.stringify({image:base64,mediaType:mediaType,prompt:"これは日本の自動車検査証です。以下の項目を読み取りJSONのみ返してください:{\"plate\":\"\",\"car_year\":\"\",\"model\":\"\",\"disp\":\"\",\"weight\":\"\",\"shaken_expiry\":\"\",\"owner_name\":\"\",\"owner_addr\":\"\"}読み取れない項目は空文字にしてください。"})
-        });
+        headers:{"Content-Type":"application/json","x-api-key":API_KEY,"anthropic-version":"2023-06-01"},
+        body:JSON.stringify({
+          model:"claude-sonnet-4-20250514",
+          max_tokens:1000,
+          messages:[{role:"user",content:[
+            {type:"image",source:{type:"base64",media_type:mediaType,data:base64}},
+            {type:"text",text:'これは日本の自動車検査証です。以下の項目を読み取りJSONのみ返してください（説明文不要）:\n{"plate":"ナンバー","car_year":"初年度登録西暦4桁","model":"型式","disp":"排気量cc数値のみ","weight":"車両重量kg数値のみ","shaken_expiry":"満了日YYYY-MM-DD","owner_name":"所有者氏名","owner_addr":"所有者住所"}\n読み取れない項目は空文字にしてください。'}
+          ]}]
+        })
+      });
       const data=await res.json();
       const text=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
-      const m=text.replace(/```json|```/g,"").match(/\{[\s\S]*\}/);
-      console.log("RAW TEXT:",text,"DATA:",JSON.stringify(data));if(!m)throw new Error("parse error");
+      const m=text.replace(/```json|```/g,"").match(/\{[\s\S]*?\}/);
+      if(!m)throw new Error("parse error");
       const r=JSON.parse(m[0]);
       applyOCR(r);
-    }catch(err){console.log("OCR ERROR:",err,err.message);
+    }catch(err){
       document.getElementById("ocrErr").textContent="読み取り失敗。手入力してください。";
       document.getElementById("ocrErr").style.display="block";
     }
