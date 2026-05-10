@@ -50,7 +50,7 @@ async function handleOCRFile(file){
       });
       const data=await res.json();
       const text=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
-      const m=text.replace(/```json|```/g,"").match(/\{[\s\S]*?\}/);
+      const m=text.replace(/```json|```/g,"").match(/\{[\s\S]*\}/);
       if(!m)throw new Error("parse error");
       const r=JSON.parse(m[0]);
       applyOCR(r);
