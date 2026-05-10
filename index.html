@@ -39,16 +39,7 @@ async function handleOCRFile(file){
       const res=await fetch("/api/ocr",{
         method:"POST",
         headers:{"Content-Type":"application/json","anthropic-version":"2023-06-01"},
-        body:JSON.stringify({
-          model:"claude-sonnet-4-20250514",
-          max_tokens:1000,
-          messages:[{role:"user",content:[
-            {type:"image",source:{type:"base64",media_type:mediaType,data:base64}},
-            {type:"text",text:'これは日本の自動車検査証です。以下の項目を読み取りJSONのみ返してください（説明文不要）:\n{"plate":"ナンバー","car_year":"初年度登録西暦4桁","model":"型式","disp":"排気量cc数値のみ","weight":"車両重量kg数値のみ","shaken_expiry":"満了日YYYY-MM-DD","owner_name":"所有者氏名","owner_addr":"所有者住所"}\n読み取れない項目は空文字にしてください。'}
-          ]}]
-        })
-      });
-      const data=await res.json();
+        body:JSON.stringify({image:base64,mediaType:mediaType,prompt:"これは日本の自動車検査証です。以下の項目を読み取りJSONのみ返してください:{\"plate\":\"\",\"car_year\":\"\",\"model\":\"\",\"disp\":\"\",\"weight\":\"\",\"shaken_expiry\":\"\",\"owner_name\":\"\",\"owner_addr\":\"\"}読み取れない項目は空文字にしてください。"})
       const text=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
       const m=text.replace(/```json|```/g,"").match(/\{[\s\S]*\}/);
       console.log("RAW TEXT:",text,"DATA:",JSON.stringify(data));if(!m)throw new Error("parse error");
