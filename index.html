@@ -54,7 +54,7 @@ async function handleOCRFile(file){
       if(!m)throw new Error("parse error");
       const r=JSON.parse(m[0]);
       applyOCR(r);
-    }catch(err){
+    }catch(err){console.log("OCR ERROR:",err,err.message);
       document.getElementById("ocrErr").textContent="読み取り失敗。手入力してください。";
       document.getElementById("ocrErr").style.display="block";
     }
