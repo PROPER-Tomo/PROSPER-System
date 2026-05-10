@@ -34,7 +34,7 @@ async function handleOCRFile(file){
     const dataUrl=e.target.result;
     document.getElementById("ocrPreview").innerHTML=`<img src="${dataUrl}" style="max-width:100%;max-height:100px;border-radius:6px;object-fit:contain">`;
     const base64=dataUrl.split(",")[1];
-    const mediaType=file.type||"image/jpeg";
+    const mediaType=(file.type||"image/jpeg").replace("jpg","jpeg");
     try{
       const res=await fetch("/api/ocr",{
         method:"POST",
