@@ -32,7 +32,7 @@ export default async function handler(req, res) {
             },
             {
               type: 'text',
-              text: 'この車検証をOCRしてください'
+              text: '車検証を読み取り、次のJSONだけを返してください。説明文やMarkdownは禁止。キーは必ず owner_name, owner_address, plate, model, chassis_no, first_reg, expiry としてください。'
             }
           ]
         }]
