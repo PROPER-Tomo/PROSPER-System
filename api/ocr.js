@@ -1,11 +1,14 @@
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') { res.status(200).end(); return; }
-  if (req.method !== 'POST') { res.status(405).json({error:'Method not allowed'}); return; }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   try {
-    const { image, mediaType, prompt } = req.body; console.log("IMAGE LEN:", image?.length, "MEDIA:", mediaType);
+    const { image, mediaType } = req.body;
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -19,15 +22,31 @@ export default async function handler(req, res) {
         messages: [{
           role: 'user',
           content: [
-            { type: 'image', source: { type: 'base64', media_type: (mediaType||'image/jpeg').replace('jpg','jpeg'), data: image } },
-            { type: 'text', text: prompt || '車検証をOCRしてください' }
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: (mediaType || 'image/jpeg').replace('jpg','jpeg'),
+                data: image
+              }
+            },
+            {
+              type: 'text',
+              text: 'この車検証をOCRしてください'
+            }
           ]
         }]
       })
     });
+
     const data = await response.json();
+
+    console.log(data);
+
     res.status(200).json(data);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
   }
 }
