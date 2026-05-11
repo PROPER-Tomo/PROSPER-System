@@ -41,7 +41,6 @@ async function handleOCRFile(file){
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({image:base64,mediaType:mediaType,prompt:prompt})
-        })
       });
       const data=await res.json();
       const text=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
