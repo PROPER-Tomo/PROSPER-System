@@ -20,7 +20,7 @@ export default async function handler(req, res) {
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: (mediaType||'image/jpeg').replace('jpg','jpeg'), data: image } },
-            { type: 'text', text: prompt }
+            { type: 'text', text: prompt || '車検証をOCRしてください' }
           ]
         }]
       })
