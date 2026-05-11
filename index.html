@@ -110,7 +110,96 @@ function editQuote(id){const q=quotes.find(x=>x.id===id);if(!q)return;editingId=
 function buildDoc(q,type){const cust=customers.find(c=>c.id===q.customer_id)||{};const lg=q.legal||{};const title=type==="estimate"?"御見積書":"請求書";const rows=[...(q.labor_lines||[]).map(l=>`<tr><td>${l.name}</td><td>${l.hours}h</td><td>¥12,000</td><td style="text-align:right">${yenN((l.hours||0)*LABOR_RATE)}</td></tr>`),(q.part_lines||[]).map(l=>`<tr><td>${l.name}</td><td>${l.qty||1}個</td><td>${yenN(l.cost||0)}×${l.margin||20}%</td><td style="text-align:right">${yenN((l.cost||0)*(l.qty||1)*(1+(l.margin||20)/100))}</td></tr>`),lg.jibaiseki?[`<tr><td>自賠責保険</td><td></td><td></td><td style="text-align:right">${yenN(lg.jibaiseki)}</td></tr>`]:[],lg.juryozei?[`<tr><td>重量税</td><td></td><td></td><td style="text-align:right">${yenN(lg.juryozei)}</td></tr>`]:[],lg.kensa_tesuryo?[`<tr><td>検査手数料</td><td></td><td></td><td style="text-align:right">${yenN(lg.kensa_tesuryo)}</td></tr>`]:[]].flat().join("");return`<div style="font-family:'IBM Plex Mono',monospace;color:#000;background:#fff;padding:24px;border-radius:8px"><div style="display:flex;justify-content:space-between;margin-bottom:20px"><div><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:5px">PROSPER</div><div style="font-size:9px;color:#999;letter-spacing:2px">VEHICLE INSPECTION SYSTEM</div></div><div style="text-align:right"><div style="font-size:20px;font-weight:700;border-bottom:2px solid #000;padding-bottom:4px">${title}</div><div style="font-size:10px;color:#888;margin-top:2px">No: ${q.doc_no||"---"}</div><div style="font-size:10px;color:#888">${q.doc_date||q.created}</div></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px"><div style="border:1px solid #ddd;border-radius:4px;padding:10px"><div style="font-size:9px;color:#999;margin-bottom:2px">お客様</div><div style="font-size:14px;font-weight:700">${cust.name||"—"} 様</div>${cust.phone?`<div style="font-size:10px;color:#777">${cust.phone}</div>`:""} ${cust.addr?`<div style="font-size:10px;color:#777">${cust.addr}</div>`:""}</div><div style="border:1px solid #ddd;border-radius:4px;padding:10px"><div style="font-size:9px;color:#999;margin-bottom:2px">車両</div><div style="font-size:14px;font-weight:700">${q.plate}</div>${q.model?`<div style="font-size:10px;color:#777">${q.model}${q.car_year?" / "+q.car_year+"年":""}</div>`:""}${q.shaken_expiry?`<div style="font-size:10px;color:#999">車検: ${q.shaken_expiry}</div>`:""}</div></div><table style="width:100%;border-collapse:collapse;margin-bottom:12px"><thead><tr><th style="background:#111;color:#fff;padding:7px 10px;text-align:left;font-size:10px">項目</th><th style="background:#111;color:#fff;padding:7px 10px;font-size:10px">数量</th><th style="background:#111;color:#fff;padding:7px 10px;font-size:10px">単価</th><th style="background:#111;color:#fff;padding:7px 10px;text-align:right;font-size:10px">金額</th></tr></thead><tbody style="font-size:11px">${rows}<tr style="background:#f5f5f5"><td colspan="3" style="padding:7px 10px;font-weight:700">工賃・部品 小計</td><td style="padding:7px 10px;text-align:right;font-weight:700">${yenN((q.labor_total||0)+(q.parts_total||0))}</td></tr><tr style="color:#666"><td colspan="3" style="padding:7px 10px">消費税（10%）</td><td style="padding:7px 10px;text-align:right">${yenN(q.tax||0)}</td></tr>${(lg.jibaiseki||lg.juryozei||lg.kensa_tesuryo)?`<tr style="background:#f5f5f5"><td colspan="3" style="padding:7px 10px;font-weight:700">法定費用 小計</td><td style="padding:7px 10px;text-align:right;font-weight:700">${yenN(q.legal_total||0)}</td></tr>`:""}</tbody><tfoot><tr style="background:#111"><td colspan="3" style="padding:10px;color:#fff;font-weight:700;font-size:13px">合計（税込）</td><td style="padding:10px;text-align:right;color:#fff;font-weight:700;font-size:16px">${yenN(q.grand_total)}</td></tr></tfoot></table><div style="border-top:1px solid #eee;padding-top:10px;font-size:10px;color:#888"><div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:#000;margin-bottom:2px">PROSPER</div><div>${SHOP.addr}</div><div>TEL/FAX: ${SHOP.tel}</div></div></div>`}
 function showDoc(id,type){const q=quotes.find(x=>x.id===id);if(!q)return;const area=document.getElementById("docPreviewArea");const title=type==="estimate"?"御見積書":"請求書";area.innerHTML=`<div style="margin-top:12px"><div class="fg no-print" style="margin-bottom:12px"><button class="btn btn-p btn-sm" onclick="window.print()">印刷 / PDF</button><button class="btn btn-g btn-sm" onclick="exportCSV('${id}')">CSV</button><button class="btn btn-g btn-sm" onclick="exportDocx('${id}','${type}')">Word形式</button><button class="btn btn-d btn-sm" onclick="document.getElementById('docPreviewArea').innerHTML=''">閉じる</button></div>${buildDoc(q,type)}</div>`;area.scrollIntoView({behavior:"smooth"})}
 function exportCSV(id){const q=quotes.find(x=>x.id===id);if(!q)return;const cust=customers.find(c=>c.id===q.customer_id)||{};const lg=q.legal||{};let csv="\uFEFFDoc No,"+(q.doc_no||"")+"\n顧客,"+(cust.name||"")+"\n車両,"+q.plate+" "+(q.model||"")+"\n発行日,"+(q.doc_date||q.created)+"\n\n項目,数量,単価,掛率,金額\n";(q.labor_lines||[]).forEach(l=>{csv+=`"${l.name}",${l.hours}h,12000,,${Math.round((l.hours||0)*12000)}\n`});(q.part_lines||[]).forEach(l=>{csv+=`"${l.name}",${l.qty||1},${l.cost||0},${l.margin||20}%,${Math.round((l.cost||0)*(l.qty||1)*(1+(l.margin||20)/100))}\n`});if(lg.jibaiseki)csv+=`自賠責,,,,${lg.jibaiseki}\n`;if(lg.juryozei)csv+=`重量税,,,,${lg.juryozei}\n`;if(lg.kensa_tesuryo)csv+=`検査手数料,,,,${lg.kensa_tesuryo}\n`;csv+=`消費税,,,,${q.tax||0}\n\n合計,,,,${Math.round(q.grand_total)}\n`;const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`${q.doc_no||"doc"}_${cust.name||"unk"}.csv`;a.click()}
-function exportDocx(id,type){const q=quotes.find(x=>x.id===id);if(!q)return;const cust=customers.find(c=>c.id===q.customer_id)||{};const title=type==="estimate"?"御見積書":"請求書";const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title></head><body>${buildDoc(q,type)}</body></html>`;const blob=new Blob([html],{type:"application/vnd.ms-word;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`${q.doc_no||"doc"}_${title}_${cust.name||"unk"}.doc`;a.click()}
+function exportDocx(id,type){const q=quotes.find(x=>x.id===id);if(!q)return;const cust=customers.find(c=>c.id===q.customer_id)||{};const title=type==="estimate"?"御見積書":"請求書";const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title></head><body>${buildDoc(q,type)}
+<script>
+function warekiToYear(str){
+  if(!str) return "";
+  const h = String(str).match(/平成\s*(\d+)/);
+  if(h) return 1988 + parseInt(h[1]);
+  const r = String(str).match(/令和\s*(\d+)/);
+  if(r) return 2018 + parseInt(r[1]);
+  return "";
+}
+
+function warekiToDate(str){
+  if(!str) return "";
+  str = String(str);
+  let y = "";
+  const h = str.match(/平成\s*(\d+)/);
+  const r = str.match(/令和\s*(\d+)/);
+  if(h) y = 1988 + parseInt(h[1]);
+  if(r) y = 2018 + parseInt(r[1]);
+  const m = str.match(/(\d+)\s*月/);
+  const d = str.match(/(\d+)\s*日/);
+  if(!y || !m || !d) return "";
+  return `${y}-${String(m[1]).padStart(2,"0")}-${String(d[1]).padStart(2,"0")}`;
+}
+
+function toCC(v){
+  if(!v) return "";
+  const n = parseFloat(String(v).replace(/[^\d.]/g,""));
+  if(!n) return "";
+  return n < 20 ? Math.round(n * 1000) : Math.round(n);
+}
+
+async function handleOCRFile(file){
+  if(!file) return;
+
+  document.getElementById("ocrScanning").style.display="block";
+  document.getElementById("ocrErr").style.display="none";
+  document.getElementById("ocrOK").style.display="none";
+
+  const dataUrl = await new Promise(resolve=>{
+    const r=new FileReader();
+    r.onload=e=>resolve(e.target.result);
+    r.readAsDataURL(file);
+  });
+
+  document.getElementById("ocrPreview").innerHTML =
+    `<img src="${dataUrl}" style="max-width:100%;max-height:100px;border-radius:6px;object-fit:contain">`;
+
+  try{
+    const base64=dataUrl.split(",")[1];
+    const mediaType=file.type||"image/jpeg";
+
+    const res=await fetch("/api/ocr",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({image:base64,mediaType:mediaType})
+    });
+
+    const data=await res.json();
+    const text=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
+
+    let j={};
+    const m=text.replace(/```json|```/g,"").match(/\{[\s\S]*\}/);
+    if(m) j=JSON.parse(m[0]);
+
+    const plate = j.plate || j.registration_number || j.vehicle_number || "";
+    const model = j.model || j.type || "";
+    const firstReg = j.first_reg || j.first_registration || j.registration_month || "";
+    const expiryRaw = j.expiry || j.shaken_expiry || j.inspection_expiry || "";
+    const dispRaw = j.displacement || j.disp || j.engine_displacement || "";
+    const weight = j.weight || j.vehicle_weight || "";
+
+    document.getElementById("qPlate").value = plate;
+    document.getElementById("qModel").value = model;
+    document.getElementById("qYear").value = j.year || warekiToYear(firstReg);
+    document.getElementById("qDisp").value = toCC(dispRaw);
+    document.getElementById("qWeight").value = String(weight).replace(/[^\d]/g,"");
+    document.getElementById("qExpiry").value = warekiToDate(expiryRaw);
+
+    document.getElementById("ocrScanning").style.display="none";
+    document.getElementById("ocrOK").style.display="block";
+    document.getElementById("ocrOK").textContent="読み取り完了。車両情報を入力しました。";
+  }catch(e){
+    document.getElementById("ocrScanning").style.display="none";
+    document.getElementById("ocrErr").style.display="block";
+    document.getElementById("ocrErr").textContent="読み取り失敗。手入力してください。";
+  }
+}
+</script>
+</body></html>`;const blob=new Blob([html],{type:"application/vnd.ms-word;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`${q.doc_no||"doc"}_${title}_${cust.name||"unk"}.doc`;a.click()}
 function renderDocSelectList(){const area=document.getElementById("docSelectList");if(!quotes.length){area.innerHTML="<div class='empty'>見積データがありません</div>";return}area.innerHTML=quotes.map(q=>{const cust=customers.find(c=>c.id===q.customer_id)||{};return`<div class="card" style="cursor:default"><div class="fb"><div><div style="font-size:10px;color:var(--B);font-family:monospace">${q.doc_no||"---"}</div><div style="color:#fff;font-weight:700;font-size:13px">${cust.name||"—"} / ${q.plate}</div><div style="color:#555;font-size:11px">${q.doc_date||q.created}</div></div><div style="text-align:right"><div class="colorB">${yen(q.grand_total)}</div><div class="fg" style="justify-content:flex-end;margin-top:4px"><button class="btn btn-g btn-sm" onclick="showDoc('${q.id}','estimate')">見積書</button><button class="btn btn-g btn-sm" onclick="showDoc('${q.id}','invoice')">請求書</button></div></div></div></div>`}).join("")}
 function doSearch(){const kw=document.getElementById("searchInput").value.trim().toLowerCase();const area=document.getElementById("searchResults");if(!kw){area.innerHTML="<div class='empty'>上のボックスに入力して検索</div>";return}const results=[];customers.forEach(c=>{const nm=c.name.toLowerCase().includes(kw)||(c.phone||"").includes(kw)||(c.addr||"").toLowerCase().includes(kw);(c.vehicles||[]).forEach(v=>{const vm=(v.plate||"").toLowerCase().includes(kw)||(v.model||"").toLowerCase().includes(kw);if(nm||vm){const qs=quotes.filter(q=>q.customer_id===c.id&&(q.plate===v.plate||nm));results.push({cust:c,vehicle:v,quotes:qs})}});if(nm&&!(c.vehicles||[]).length)results.push({cust:c,vehicle:null,quotes:quotes.filter(q=>q.customer_id===c.id)})});if(!results.length){area.innerHTML="<div class='empty'>「"+kw+"」に一致するデータがありません</div>";return}area.innerHTML=results.map(r=>{const c=r.cust,v=r.vehicle,qs=r.quotes;return`<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px"><div class="fb"><div><div style="color:#fff;font-weight:700;font-size:14px">${c.name}</div>${c.phone?`<div style="color:#666;font-size:11px">${c.phone}</div>`:""} ${c.addr?`<div style="color:#555;font-size:11px">${c.addr}</div>`:""}</div>${mkTag(qs.length+"件","#7FB6C6")}</div>${v?`<div style="margin-top:8px;background:#111;border-radius:6px;padding:8px 12px"><div class="fb"><div><div style="color:var(--B);font-weight:700;font-size:13px">${v.plate}</div>${v.model?`<div style="color:#777;font-size:11px">${v.model}${v.year?" / "+v.year+"年":""}</div>`:""} ${v.expiry?`<div style="color:#555;font-size:11px">車検: ${v.expiry}</div>`:""}</div><button class="btn btn-p btn-sm" onclick="loadVehicleToForm('${c.id}','${v.id}')">見積作成</button></div></div>`:""} ${qs.length?`<div style="margin-top:8px">${qs.slice(0,3).map(q=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid #1e3038;font-size:11px"><span style="color:#aaa">${q.doc_no||"---"} / ${q.doc_date||q.created}</span><div class="fg" style="gap:4px"><span class="colorB">${yen(q.grand_total)}</span><button class="btn btn-y btn-sm" onclick="editQuote('${q.id}');switchTab(0)">編集</button><button class="btn btn-g btn-sm" onclick="switchTab(4);setTimeout(()=>showDoc('${q.id}','estimate'),100)">書類</button></div></div>`).join("")}</div>`:""}</div>`}).join("")}
 function loadVehicleToForm(cid,vid){switchTab(0);renderCustSelect();document.getElementById("qCid").value=cid;onCustChange();const sel=document.getElementById("qVehicleSelect");setTimeout(()=>{sel.value=vid;onVehicleSelect()},50)}
@@ -129,4 +218,93 @@ function delVehicle(custId,vehicleId){if(!confirm("この車両を削除しま�
 function renderCustList(){document.getElementById("custCount").textContent="顧客 "+customers.length+" 件";if(!customers.length){document.getElementById("custList").innerHTML="<div class='empty'>顧客を登録してください</div>";return}document.getElementById("custList").innerHTML=customers.map(c=>{const qc=quotes.filter(q=>q.customer_id===c.id).length;const vc=(c.vehicles||[]).length;return`<div class="card"><div class="fb"><div><div style="color:#fff;font-weight:700;font-size:14px">${c.name}</div>${c.phone?`<div style="color:#666;font-size:11px;margin-top:1px">${c.phone}</div>`:""} ${c.addr?`<div style="color:#555;font-size:11px">${c.addr}</div>`:""} ${c.note?`<div style="color:#444;font-size:11px">${c.note}</div>`:""}</div><div class="fg">${mkTag(qc+"件","#7FB6C6")}${mkTag(vc+"台","#888")}<button class="btn btn-y btn-sm" onclick="editCustomer('${c.id}')">編集</button><button class="btn btn-d btn-sm" onclick="delC('${c.id}')">削除</button></div></div><div style="margin-top:10px;border-top:1px solid #1e3038;padding-top:10px"><div class="fb mb10"><span style="font-size:11px;color:#666">登録車両</span><button class="btn btn-g btn-sm" onclick="showVehicleForm('${c.id}')">+ 車両追加</button></div>${(c.vehicles||[]).length?(c.vehicles||[]).map(v=>{const vq=quotes.filter(q=>q.customer_id===c.id&&q.plate===v.plate).length;return`<div class="vehicle-row"><div><div style="color:#ccc;font-weight:700;font-size:12px">${v.plate}</div>${v.model?`<div style="color:#666;font-size:11px">${v.model}${v.year?" / "+v.year+"年":""}</div>`:""} ${v.expiry?`<div style="color:#555;font-size:10px">車検: ${v.expiry}</div>`:""}</div><div class="fg"><span style="color:#666;font-size:10px">${vq}件</span><button class="btn btn-p btn-sm" onclick="loadVehicleToForm('${c.id}','${v.id}')">見積</button><button class="btn btn-y btn-sm" onclick="showVehicleForm('${c.id}','${v.id}')">編集</button><button class="btn btn-d btn-sm" onclick="delVehicle('${c.id}','${v.id}')">削除</button></div></div>`}).join(""):`<div style="color:#444;font-size:11px;text-align:center;padding:8px 0">車両が登録されていません</div>`}</div></div>`}).join("")}
 function delC(id){if(!confirm("この顧客と全ての車両データを削除しますか？"))return;customers=customers.filter(c=>c.id!==id);lsSet("pc",customers);renderAll()}
 function showToast(msg){const el=document.getElementById("toast");el.textContent=msg;el.classList.add("show");setTimeout(()=>el.classList.remove("show"),2500)}
-</script></body></html>
+</script>
+<script>
+function warekiToYear(str){
+  if(!str) return "";
+  const h = String(str).match(/平成\s*(\d+)/);
+  if(h) return 1988 + parseInt(h[1]);
+  const r = String(str).match(/令和\s*(\d+)/);
+  if(r) return 2018 + parseInt(r[1]);
+  return "";
+}
+
+function warekiToDate(str){
+  if(!str) return "";
+  str = String(str);
+  let y = "";
+  const h = str.match(/平成\s*(\d+)/);
+  const r = str.match(/令和\s*(\d+)/);
+  if(h) y = 1988 + parseInt(h[1]);
+  if(r) y = 2018 + parseInt(r[1]);
+  const m = str.match(/(\d+)\s*月/);
+  const d = str.match(/(\d+)\s*日/);
+  if(!y || !m || !d) return "";
+  return `${y}-${String(m[1]).padStart(2,"0")}-${String(d[1]).padStart(2,"0")}`;
+}
+
+function toCC(v){
+  if(!v) return "";
+  const n = parseFloat(String(v).replace(/[^\d.]/g,""));
+  if(!n) return "";
+  return n < 20 ? Math.round(n * 1000) : Math.round(n);
+}
+
+async function handleOCRFile(file){
+  if(!file) return;
+
+  document.getElementById("ocrScanning").style.display="block";
+  document.getElementById("ocrErr").style.display="none";
+  document.getElementById("ocrOK").style.display="none";
+
+  const dataUrl = await new Promise(resolve=>{
+    const r=new FileReader();
+    r.onload=e=>resolve(e.target.result);
+    r.readAsDataURL(file);
+  });
+
+  document.getElementById("ocrPreview").innerHTML =
+    `<img src="${dataUrl}" style="max-width:100%;max-height:100px;border-radius:6px;object-fit:contain">`;
+
+  try{
+    const base64=dataUrl.split(",")[1];
+    const mediaType=file.type||"image/jpeg";
+
+    const res=await fetch("/api/ocr",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({image:base64,mediaType:mediaType})
+    });
+
+    const data=await res.json();
+    const text=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
+
+    let j={};
+    const m=text.replace(/```json|```/g,"").match(/\{[\s\S]*\}/);
+    if(m) j=JSON.parse(m[0]);
+
+    const plate = j.plate || j.registration_number || j.vehicle_number || "";
+    const model = j.model || j.type || "";
+    const firstReg = j.first_reg || j.first_registration || j.registration_month || "";
+    const expiryRaw = j.expiry || j.shaken_expiry || j.inspection_expiry || "";
+    const dispRaw = j.displacement || j.disp || j.engine_displacement || "";
+    const weight = j.weight || j.vehicle_weight || "";
+
+    document.getElementById("qPlate").value = plate;
+    document.getElementById("qModel").value = model;
+    document.getElementById("qYear").value = j.year || warekiToYear(firstReg);
+    document.getElementById("qDisp").value = toCC(dispRaw);
+    document.getElementById("qWeight").value = String(weight).replace(/[^\d]/g,"");
+    document.getElementById("qExpiry").value = warekiToDate(expiryRaw);
+
+    document.getElementById("ocrScanning").style.display="none";
+    document.getElementById("ocrOK").style.display="block";
+    document.getElementById("ocrOK").textContent="読み取り完了。車両情報を入力しました。";
+  }catch(e){
+    document.getElementById("ocrScanning").style.display="none";
+    document.getElementById("ocrErr").style.display="block";
+    document.getElementById("ocrErr").textContent="読み取り失敗。手入力してください。";
+  }
+}
+</script>
+</body></html>
