@@ -32,7 +32,7 @@ export default async function handler(req, res) {
             },
             {
               type: 'text',
-              text: '車検証を読み取り、次のJSONだけを返してください。説明文やMarkdownは禁止。キーは必ず owner_name, owner_address, user_name, user_address, plate, model, chassis_no, first_reg, expiry, year, displacement, weight としてください。user_nameは使用者欄、owner_nameは所有者欄です。使用者欄がない場合はowner_nameと同じ値を入れてください。yearは初度登録年月を西暦年に変換、displacementは総排気量をcc換算、weightは車両重量kgを数値で返してください。'
+              text: '車検証を読み取り、次のJSONだけを返してください。説明文やMarkdownは禁止。キーは必ず owner_name, owner_address, user_name, user_address, plate, model, chassis_no, first_reg, expiry, year, displacement, weight としてください。user_nameは使用者欄、owner_nameは所有者欄です。使用者欄がない場合はowner_nameと同じ値を入れてください。yearは初度登録年月を西暦年（数値）に変換してください。expiryは有効期間の満了する日をYYYY-MM-DD形式に変換してください（例: 令和7年10月31日→2025-10-31）。first_regは初度登録年月をYYYY-MM-DD形式に変換してください。displacementは総排気量をcc換算、weightは車両重量kgを数値で返してください。'
             }
           ]
         }]

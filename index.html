@@ -155,16 +155,22 @@ function warekiToYear(str){
 
 function warekiToDate(str){
   if(!str) return "";
-  str = String(str);
+  str = String(str).trim();
+  // Already YYYY-MM-DD or YYYY/MM/DD
+  const iso = str.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
+  if(iso) return `${iso[1]}-${iso[2].padStart(2,"0")}-${iso[3].padStart(2,"0")}`;
   let y = "";
+  const s = str.match(/昭和\s*(\d+)/);
   const h = str.match(/平成\s*(\d+)/);
   const r = str.match(/令和\s*(\d+)/);
+  if(s) y = 1925 + parseInt(s[1]);
   if(h) y = 1988 + parseInt(h[1]);
   if(r) y = 2018 + parseInt(r[1]);
   const m = str.match(/(\d+)\s*月/);
   const d = str.match(/(\d+)\s*日/);
-  if(!y || !m || !d) return "";
-  return `${y}-${String(m[1]).padStart(2,"0")}-${String(d[1]).padStart(2,"0")}`;
+  if(!y || !m) return "";
+  const dd = d ? d[1] : "01";
+  return `${y}-${String(m[1]).padStart(2,"0")}-${String(dd).padStart(2,"0")}`;
 }
 
 function toCC(v){
