@@ -3,7 +3,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { messages, vehicle } = req.body;
+    const { messages, vehicle, masters } = req.body;
 
     const v = vehicle || {};
     const catLabel = { normal: '普通乗用', kei: '軽自動車', kamotsu: '普通貨物' }[v.cat] || v.cat || '不明';
@@ -23,7 +23,10 @@ export default async function handler(req, res) {
 
 対象車両: ${vehicleInfo || '（未入力）'}
 
-【重要】返答は必ず set_estimate ツールを使うこと。テキストのみで返答しないこと。
+${(masters?.parts?.length) ? '部品マスター（登録済み原価・必ずこの価格を使うこと）:\n' + masters.parts.map(p=>`・${p.name}: 原価${p.cost}円 掛率${p.margin}%`).join('\n') : ''}
+${(masters?.labor?.length) ? '\n工賃マスター（登録済み標準時間・必ずこの時間を使うこと）:\n' + masters.labor.map(l=>`・${l.name}: ${l.hours}h`).join('\n') : ''}
+
+【重要】返答は必ず set_estimate ツールを使うこと。テキストのみで返答しないこと。マスターに登録されている部品・作業はマスターの原価・時間を優先すること。
 - 見積を作る場合: labor_lines と part_lines を設定して summary に説明を書く
 - 質問への回答・確認の場合: labor_lines と part_lines は空配列にして summary にメッセージを書く
 - 作業名・部品名は日本語で具体的に記入
