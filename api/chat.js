@@ -23,12 +23,12 @@ export default async function handler(req, res) {
 
 対象車両: ${vehicleInfo || '（未入力）'}
 
-見積を作成・変更する際は set_estimate ツールを必ず使用してください。
+【重要】返答は必ず set_estimate ツールを使うこと。テキストのみで返答しないこと。
+- 見積を作る場合: labor_lines と part_lines を設定して summary に説明を書く
+- 質問への回答・確認の場合: labor_lines と part_lines は空配列にして summary にメッセージを書く
 - 作業名・部品名は日本語で具体的に記入
 - part_lines の cost は税抜原価（円）
-- hours は小数OK（例: 0.5 = 30分）
-- summary にユーザーへの説明を必ず含めること
-質問や確認だけの場合はツールを使わず返答してください。`;
+- hours は小数OK（例: 0.5 = 30分）`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -41,6 +41,7 @@ export default async function handler(req, res) {
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 1024,
         system,
+        tool_choice: { type: 'any' },
         tools: [{
           name: 'set_estimate',
           description: '見積の工賃・部品明細を設定する（既存の内容を上書き）',
