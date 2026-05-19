@@ -251,7 +251,11 @@ async function handleOCRFile(file){
     document.getElementById("qExpiry").value = warekiToDate(expiryRaw);
     detectCatAndFill();
 
-    const custName=(j.user_name||j.owner_name||"").replace(/\s/g,"");
+    const isSymbol=s=>/^[\*＊※\-ー－×✕＿_]+$/.test((s||"").replace(/\s/g,""));
+    const useOwner=isSymbol(j.user_name)||!(j.user_name||"").trim();
+    const effectiveName=(useOwner?(j.owner_name||""):(j.user_name||"")).replace(/\s/g,"");
+    const effectiveAddr=useOwner?(j.owner_address||""):(j.user_address||j.owner_address||"");
+    const custName=effectiveName;
     if(custName){
       const match=customers.find(c=>c.name.replace(/\s/g,"").includes(custName)||custName.includes(c.name.replace(/\s/g,"")));
       if(match){
@@ -259,14 +263,13 @@ async function handleOCRFile(file){
         onCustChange();
         document.getElementById("ocrOK").textContent="✓ 読み取り完了。既存顧客「"+match.name+"」を選択しました。";
       }else{
-        document.getElementById("newCustName").value=j.user_name||j.owner_name;
-        document.getElementById("newCustAddr").value=j.user_address||j.owner_address||"";
+        document.getElementById("newCustName").value=useOwner?(j.owner_name||""):(j.user_name||"");
+        document.getElementById("newCustAddr").value=effectiveAddr;
         document.getElementById("newCustPhone").value="";
-        const ownerNote=j.owner_name&&j.owner_name!==(j.user_name||j.owner_name)?"所有者: "+j.owner_name:"";
-        document.getElementById("newCustNote")||Object.assign(document.getElementById("newCustAddr"),{});
+        const ownerNote=!useOwner&&j.owner_name&&j.owner_name!==j.user_name?"所有者: "+j.owner_name:"";
         if(document.getElementById("newCustNote"))document.getElementById("newCustNote").value=ownerNote;
         document.getElementById("inlineCust").style.display="block";
-        document.getElementById("ocrOK").textContent="✓ 読み取り完了。使用者が未登録のため登録を促しています。";
+        document.getElementById("ocrOK").textContent="✓ 読み取り完了。"+(useOwner?"所有者":"使用者")+"が未登録のため登録を促しています。";
       }
     }else{
       document.getElementById("ocrOK").textContent="✓ 車両情報を読み取りました。確認してください。";
