@@ -448,7 +448,7 @@ const PRICE_LIST={
 };
 function setPriceCat(cat){
   priceListCat=cat;
-  const btns=document.getElementById('priceCatBtns');
+  const btns=document.getElementById('plCatBtns');
   if(btns)Array.from(btns.children).forEach((b,i)=>{const c=['kei','normal','kamotsu','tire'][i];b.className='btn btn-sm '+(c===cat?'btn-p':'btn-g')});
   renderPriceList()
 }
