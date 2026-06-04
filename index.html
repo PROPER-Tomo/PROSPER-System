@@ -205,6 +205,21 @@ function toCC(v){
   return n < 20 ? Math.round(n * 1000) : Math.round(n);
 }
 
+async function compressImage(file, maxPx=1600){
+  const dataUrl = await new Promise(r=>{const fr=new FileReader();fr.onload=e=>r(e.target.result);fr.readAsDataURL(file)});
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      const ratio=Math.min(1,maxPx/Math.max(img.width,img.height));
+      const w=Math.round(img.width*ratio),h=Math.round(img.height*ratio);
+      const c=document.createElement("canvas");c.width=w;c.height=h;
+      c.getContext("2d").drawImage(img,0,0,w,h);
+      resolve(c.toDataURL("image/jpeg",0.88));
+    };
+    img.src=dataUrl;
+  });
+}
+
 async function handleOCRFile(file){
   if(!file) return;
 
@@ -212,18 +227,14 @@ async function handleOCRFile(file){
   document.getElementById("ocrErr").style.display="none";
   document.getElementById("ocrOK").style.display="none";
 
-  const dataUrl = await new Promise(resolve=>{
-    const r=new FileReader();
-    r.onload=e=>resolve(e.target.result);
-    r.readAsDataURL(file);
-  });
+  const dataUrl = await compressImage(file);
 
   document.getElementById("ocrPreview").innerHTML =
     `<img src="${dataUrl}" style="max-width:100%;max-height:100px;border-radius:6px;object-fit:contain">`;
 
   try{
     const base64=dataUrl.split(",")[1];
-    const mediaType=file.type||"image/jpeg";
+    const mediaType="image/jpeg";
 
     const res=await fetch("/api/ocr",{
       method:"POST",
@@ -282,7 +293,7 @@ async function handleOCRFile(file){
   }catch(e){
     document.getElementById("ocrScanning").style.display="none";
     document.getElementById("ocrErr").style.display="block";
-    document.getElementById("ocrErr").textContent="読み取り失敗。手入力してください。";
+    document.getElementById("ocrErr").textContent="読み取り失敗: "+e.message;
   }
 }
 </script>

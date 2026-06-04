@@ -1,4 +1,12 @@
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb'
+    }
+  }
+};
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
@@ -8,6 +16,10 @@ export default async function handler(req, res) {
 
   try {
     const { image, mediaType } = req.body;
+
+    if (!image) {
+      return res.status(400).json({ error: 'image is required' });
+    }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -26,7 +38,7 @@ export default async function handler(req, res) {
               type: 'image',
               source: {
                 type: 'base64',
-                media_type: (mediaType || 'image/jpeg').replace('jpg','jpeg'),
+                media_type: (mediaType || 'image/jpeg').replace('jpg', 'jpeg'),
                 data: image
               }
             },
@@ -41,7 +53,10 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    console.log(data);
+    if (!response.ok) {
+      console.error('Anthropic API error:', data);
+      return res.status(response.status).json({ error: data.error?.message || 'Anthropic API error', detail: data });
+    }
 
     res.status(200).json(data);
 
