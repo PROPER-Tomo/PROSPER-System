@@ -16,7 +16,7 @@ const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
 window.onload=()=>{
   document.getElementById("dateStr").textContent=todayStr();
   document.getElementById("qDocDate").value=todayStr();
-  customers=lsGet("pc")||[];quotes=lsGet("pq")||[];partsMaster=lsGet("pm")||[];laborMaster=lsGet("lm")||[];if(!laborMaster.length){for(const[cat,secs]of Object.entries(PRICE_LIST)){for(const[section,items]of Object.entries(secs)){items.forEach(item=>{laborMaster.push({id:uid(),name:item.n,hours:0,fixedPrice:item.p,cat,section,unit:item.u||null})})}}lsSet("lm",laborMaster)}
+  customers=lsGet("pc")||[];quotes=lsGet("pq")||[];partsMaster=lsGet("pm")||[];laborMaster=lsGet("lm")||[];if(!laborMaster.some(l=>l.cat)){for(const[cat,secs]of Object.entries(PRICE_LIST)){for(const[section,items]of Object.entries(secs)){items.forEach(item=>{laborMaster.push({id:uid(),name:item.n,hours:0,fixedPrice:item.p,cat,section,unit:item.u||null})})}}lsSet("lm",laborMaster)}
   initLines();renderAll();updateDocNo();
   fetch('/api/rates').then(r=>r.json()).then(d=>{
     if(d.jibaiseki)RATES.jibaiseki=d.jibaiseki;
