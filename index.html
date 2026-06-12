@@ -443,7 +443,7 @@ function addPriceItem(name,price){const line={id:uid(),name,hours:0};if(price)li
 function pickLaborMaster(id){const l=laborMaster.find(x=>x.id===id);if(!l)return;const line={id:uid(),name:l.name,hours:l.hours};if(l.fixedPrice!=null)line.fixedPrice=l.fixedPrice;laborLines.push(line);renderLaborLines();calcTotals();document.getElementById("laborPicker").style.display="none";showToast(l.name+"を追加")}
 let orderFilter='';
 function toWareki(dateStr){const y=new Date(dateStr||todayStr()).getFullYear();if(y>=2019)return{i:'R',n:y-2018};if(y>=1989)return{i:'H',n:y-1988};return{i:'S',n:y-1925}}
-function genOrderNo(q){const w=toWareki(q.order_date||todayStr());const prefix='A.P'+w.i+w.n;const used=quotes.filter(x=>x.order_no&&x.order_no.startsWith(prefix)).length;return prefix+String(used+1).padStart(4,'0')+'.'+(q.cat_code||'13')}
+function genOrderNo(q){const w=toWareki(q.order_date||todayStr());const prefix='A.P'+String(w.n).padStart(2,'0')+w.i;const used=quotes.filter(x=>x.order_no&&x.order_no.startsWith(prefix)).length;return prefix+String(used+1).padStart(4,'0')+'.'+(q.cat_code||'13')}
 const ORDER_STATUS_COLOR={'受注':'#2d8cb5','作業中':'#f90','完了':'#2a9a5a','請求済み':'#888'};
 const ORDER_STATUS_NEXT={'受注':'作業中','作業中':'完了','完了':'請求済み'};
 function setOrderFilter(f){orderFilter=f;const btns=document.getElementById('orderFilterBtns');if(btns){const labels=['','受注','作業中','完了','請求済み'];Array.from(btns.children).forEach((b,i)=>b.className='btn btn-sm '+(labels[i]===f?'btn-p':'btn-g'))}renderOrderList()}
