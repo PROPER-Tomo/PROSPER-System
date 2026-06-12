@@ -178,17 +178,28 @@ async function handleCustFormOCRFile(file){
     const name=(useOwner?(j.owner_name||""):(j.user_name||"")).trim();
     const addr=useOwner?(j.owner_address||""):(j.user_address||j.owner_address||"");
     const ownerNote=!useOwner&&j.owner_name&&j.owner_name!==j.user_name?"所有者: "+j.owner_name:"";
-    if(name)document.getElementById("cName").value=name;
-    if(addr)document.getElementById("cAddr").value=addr;
-    if(ownerNote)document.getElementById("cNote").value=ownerNote;
-    if(j.plate)document.getElementById("cVPlate").value=j.plate;
-    if(j.model)document.getElementById("cVModel").value=j.model;
-    if(j.year)document.getElementById("cVYear").value=j.year;
-    if(j.displacement)document.getElementById("cVDisp").value=toCC(j.displacement);
-    if(j.weight)document.getElementById("cVWeight").value=String(j.weight).replace(/[^\d]/g,"");
-    if(j.expiry)document.getElementById("cVExpiry").value=warekiToDate(j.expiry)||j.expiry;
-    document.getElementById("cOcrOK").textContent="✓ 読み取り完了。内容を確認してください。";
-    document.getElementById("cOcrOK").style.display="block";
+    const plate=(j.plate||"").trim();
+    const vehicle=plate?{id:uid(),plate,year:j.year||"",model:j.model||"",disp:toCC(j.displacement)||"",weight:String(j.weight||"").replace(/[^\d]/g,""),expiry:warekiToDate(j.expiry)||j.expiry||""}:null;
+    if(name){
+      const existing=customers.find(c=>c.name.replace(/\s/g,"").includes(name.replace(/\s/g,""))||name.replace(/\s/g,"").includes(c.name.replace(/\s/g,"")));
+      if(existing){
+        if(vehicle){existing.vehicles=existing.vehicles||[];existing.vehicles.push(vehicle);saveC();showToast("「"+existing.name+"」に車両を登録しました ✓")}
+        else{showToast("既存顧客「"+existing.name+"」が見つかりました")}
+        document.getElementById("custFormWrap").style.display="none";
+        document.getElementById("cOcrPreview").innerHTML="<span class='ocr-ph'><span class='icon'>📄</span>タップして車検証を撮影・選択</span>";
+        renderAll();
+      }else{
+        document.getElementById("cName").value=name;
+        if(addr)document.getElementById("cAddr").value=addr;
+        if(ownerNote)document.getElementById("cNote").value=ownerNote;
+        if(vehicle){document.getElementById("cVPlate").value=vehicle.plate;document.getElementById("cVModel").value=vehicle.model;document.getElementById("cVYear").value=vehicle.year;document.getElementById("cVDisp").value=vehicle.disp;document.getElementById("cVWeight").value=vehicle.weight;document.getElementById("cVExpiry").value=vehicle.expiry}
+        saveCustomer();
+      }
+    }else{
+      if(vehicle){document.getElementById("cVPlate").value=vehicle.plate;document.getElementById("cVModel").value=vehicle.model;document.getElementById("cVYear").value=vehicle.year;document.getElementById("cVDisp").value=vehicle.disp;document.getElementById("cVWeight").value=vehicle.weight;document.getElementById("cVExpiry").value=vehicle.expiry}
+      document.getElementById("cOcrOK").textContent="✓ 車両情報を読み取りました。お客様名をご入力ください。";
+      document.getElementById("cOcrOK").style.display="block";
+    }
   }catch(e){
     document.getElementById("cOcrErr").textContent="読み取り失敗: "+e.message;
     document.getElementById("cOcrErr").style.display="block";
