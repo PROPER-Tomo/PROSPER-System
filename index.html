@@ -17,7 +17,11 @@ const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
 window.onload=()=>{
   document.getElementById("dateStr").textContent=todayStr();
   document.getElementById("qDocDate").value=todayStr();
-  customers=lsGet("pc")||[];quotes=lsGet("pq")||[];partsMaster=lsGet("pm")||[];laborMaster=lsGet("lm")||[];customerCats=lsGet("cc")||DEFAULT_CUST_CATS;if(!laborMaster.some(l=>l.cat)){for(const[cat,secs]of Object.entries(PRICE_LIST)){for(const[section,items]of Object.entries(secs)){items.forEach(item=>{laborMaster.push({id:uid(),name:item.n,hours:0,fixedPrice:item.p,cat,section,unit:item.u||null})})}}saveM()}
+  customers=lsGet("pc")||[];quotes=lsGet("pq")||[];partsMaster=lsGet("pm")||[];laborMaster=lsGet("lm")||[];customerCats=lsGet("cc")||DEFAULT_CUST_CATS;
+  // PRICE_LIST由来のシード項目を除去（重複防止）
+  const _plNames=new Set();for(const[_c,_s]of Object.entries(PRICE_LIST))for(const[,_i]of Object.entries(_s))_i.forEach(x=>_plNames.add(_c+'|'+x.n));
+  const _before=laborMaster.length;laborMaster=laborMaster.filter(l=>!_plNames.has((l.cat||'')+'|'+l.name));
+  if(laborMaster.length!==_before)saveM();
   initLines();renderAll();updateDocNo();initFirestore();
   fetch('/api/rates').then(r=>r.json()).then(d=>{
     if(d.jibaiseki)RATES.jibaiseki=d.jibaiseki;
