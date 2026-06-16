@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     const { messages, vehicle, masters } = req.body;
 
     const v = vehicle || {};
-    const catLabel = { normal: '普通乗用', kei: '軽自動車', kamotsu: '普通貨物' }[v.cat] || v.cat || '不明';
+    const catLabel = { normal: '普通乗用', kei: '軽自動車', kamotsu: '普通貨物', bike250: '小型二輪(251cc↑)', bike125: '軽二輪(~250cc)' }[v.cat] || v.cat || '不明';
     const vehicleInfo = [
       v.plate ? `ナンバー: ${v.plate}` : null,
       v.model ? `型式: ${v.model}` : null,
