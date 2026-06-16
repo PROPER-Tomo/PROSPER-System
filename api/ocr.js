@@ -41,7 +41,7 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-opus-4-7',
         max_tokens: 1000,
         messages: [{
           role: 'user',
@@ -49,7 +49,7 @@ export default async function handler(req, res) {
             fileContent,
             {
               type: 'text',
-              text: '車検証を読み取り、次のJSONだけを返してください。説明文やMarkdownは禁止。キーは必ず owner_name, owner_address, user_name, user_address, plate, model, chassis_no, first_reg, expiry, year, displacement, weight としてください。user_nameは使用者欄、owner_nameは所有者欄です。使用者欄がない場合はowner_nameと同じ値を入れてください。yearは初度登録年月を西暦年（数値）に変換してください。expiryは有効期間の満了する日をYYYY-MM-DD形式に変換してください（例: 令和7年10月31日→2025-10-31）。first_regは初度登録年月をYYYY-MM-DD形式に変換してください。displacementは総排気量（エンジン排気量）をcc換算してください（最大積載量・積載重量と混同しないこと）。weightは車両重量kgを数値で返してください。'
+              text: 'この車検証（自動車検査証）を読み取り、以下のJSON形式のみを返してください。前置き・説明・マークダウン・コードブロック（```）は一切不要です。JSONオブジェクトだけを出力してください。\n{"owner_name":"","owner_address":"","user_name":"","user_address":"","plate":"","model":"","chassis_no":"","first_reg":"","expiry":"","year":0,"displacement":0,"weight":0}\n\nルール:\n- user_name=使用者欄、owner_name=所有者欄（使用者欄がなければowner_nameと同値）\n- year=初度登録年月を西暦年（整数）\n- expiry=有効期間満了日をYYYY-MM-DD形式\n- first_reg=初度登録年月をYYYY-MM-DD形式\n- displacement=総排気量をcc整数（最大積載量・車両総重量と混同厳禁）\n- weight=車両重量kg整数'
             }
           ]
         }]
