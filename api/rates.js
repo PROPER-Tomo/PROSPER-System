@@ -30,7 +30,8 @@ export default function handler(req, res) {
       },
       bike250: { standard: 3800, over13: 4600, over18: 5000 }
     },
-    kensa_tesuryo: { normal_3: 2600, normal_5: 2500, kei: 2500, bike250: 1700 },
+    kensa_tesuryo: { normal_3: 2600, normal_5: 2500, kei: 2500, bike250: 1700,
+      chukoshinki_3: 2900, chukoshinki_5: 2800, chukoshinki_kei: 2800 },
     fetched_at: new Date().toISOString()
   });
 }
