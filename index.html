@@ -1002,6 +1002,7 @@ ${b.items.map(item=>`<div style="display:grid;grid-template-columns:1fr 46px 72p
 function onMultiCidChange(){
   multiVehicleBlocks=multiVehicleBlocks.map(b=>({...b,vehicleId:null,label:''}));
   renderMultiBlocks();
+  calcMultiTotals();
 }
 function openGlobalPicker(bid){pickerTargetBid=bid;gpLaborCat='normal';gpLaborSection=null;document.getElementById('globalPicker').style.display='flex';gpTab('labor');}
 function closeGlobalPicker(){document.getElementById('globalPicker').style.display='none';pickerTargetBid=null;}
@@ -1065,9 +1066,18 @@ function addMultiItemFromMaster(bid,name,price){
 }
 function calcMultiTotals(){
   const subtotal=multiVehicleBlocks.reduce((s,b)=>s+b.items.reduce((ss,i)=>ss+(i.price||0)*(i.qty||1),0),0);
-  const tax=Math.round(subtotal*0.1);const total=subtotal+tax;
+  const cid=document.getElementById('mCid')?.value;
+  const cust=customers.find(x=>x.id===cid)||{};
+  const custCat=cust.catId?customerCats.find(x=>x.id===cust.catId):null;
+  const rate=custCat?custCat.rate:1;
+  const discount=rate<1?Math.round(subtotal*(1-rate)):0;
+  const taxable=subtotal-discount;
+  const tax=Math.round(taxable*0.1);
+  const total=taxable+tax;
   const el=document.getElementById('multiTotals');
-  if(el)el.innerHTML=`<div style="background:#f0f5f8;border-radius:8px;padding:10px 14px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:#666">税抜合計</span><span>¥${subtotal.toLocaleString()}</span></div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:#666">消費税(10%)</span><span>¥${tax.toLocaleString()}</span></div><div style="display:flex;justify-content:space-between"><span style="font-weight:700">合計（税込）</span><span style="font-size:18px;font-weight:700;color:var(--B)">¥${total.toLocaleString()}</span></div></div>`;
+  if(!el)return;
+  const discRow=discount?`<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:#c05000">${custCat.name} 割引 (${Math.round((1-rate)*100)}%)</span><span style="color:#c05000">-¥${discount.toLocaleString()}</span></div>`:'';
+  el.innerHTML=`<div style="background:#f0f5f8;border-radius:8px;padding:10px 14px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:#666">税抜合計</span><span>¥${subtotal.toLocaleString()}</span></div>${discRow}<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:#666">消費税(10%)</span><span>¥${tax.toLocaleString()}</span></div><div style="display:flex;justify-content:space-between"><span style="font-weight:700">合計（税込）</span><span style="font-size:18px;font-weight:700;color:var(--B)">¥${total.toLocaleString()}</span></div></div>`;
 }
 function updateMultiDocNo(){
   const today=todayStr();const ymd=today.replace(/-/g,'').slice(2);
@@ -1082,8 +1092,13 @@ function saveMultiQuote(){
   const hasItems=multiVehicleBlocks.some(b=>b.items.some(i=>i.name||i.price>0));
   if(!hasItems){showToast('少なくとも1つ品目を入力してください');return;}
   const subtotal=multiVehicleBlocks.reduce((s,b)=>s+b.items.reduce((ss,i)=>ss+(i.price||0)*(i.qty||1),0),0);
-  const tax=Math.round(subtotal*0.1);const now=new Date().toISOString();
-  const q={id:editingMultiId||uid(),multi:true,customer_id:cid,doc_date:document.getElementById('mDate').value,doc_no:document.getElementById('mDocNo').value,cat_code:document.getElementById('mCatCode').value,note:document.getElementById('mNote').value,vehicles:multiVehicleBlocks.map(b=>({id:b.id,label:b.label,vehicleId:b.vehicleId||null,items:b.items.filter(i=>i.name||i.price).map(i=>({...i}))})),subtotal,tax,grand_total:subtotal+tax,created:editingMultiId?(quotes.find(x=>x.id===editingMultiId)||{}).created||now:now,updated:now};
+  const cust=customers.find(x=>x.id===cid)||{};
+  const custCat=cust.catId?customerCats.find(x=>x.id===cust.catId):null;
+  const rate=custCat?custCat.rate:1;
+  const discount_amount=rate<1?Math.round(subtotal*(1-rate)):0;
+  const taxable=subtotal-discount_amount;
+  const tax=Math.round(taxable*0.1);const now=new Date().toISOString();
+  const q={id:editingMultiId||uid(),multi:true,customer_id:cid,doc_date:document.getElementById('mDate').value,doc_no:document.getElementById('mDocNo').value,cat_code:document.getElementById('mCatCode').value,note:document.getElementById('mNote').value,vehicles:multiVehicleBlocks.map(b=>({id:b.id,label:b.label,vehicleId:b.vehicleId||null,items:b.items.filter(i=>i.name||i.price).map(i=>({...i}))})),subtotal,discount_amount,tax,grand_total:taxable+tax,created:editingMultiId?(quotes.find(x=>x.id===editingMultiId)||{}).created||now:now,updated:now};
   if(editingMultiId){quotes=quotes.map(x=>x.id===editingMultiId?q:x);}else{quotes.unshift(q);}
   saveQ();renderMultiList();document.getElementById('multiFormWrap').style.display='none';editingMultiId=null;showToast('保存しました');
 }
