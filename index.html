@@ -965,8 +965,9 @@ function renderMultiBlocks(){
     // Vehicle selector
     let vehicleSel;
     if(custVehicles.length){
+      const vidFound=b.vehicleId&&custVehicles.find(v=>v.id===b.vehicleId);
       const opts='<option value="">-- 車両選択 --</option>'+custVehicles.map(v=>`<option value="${v.id}"${b.vehicleId===v.id?' selected':''}>${v.plate||''}${v.model?' '+v.model:''}</option>`).join('');
-      vehicleSel=`<select onchange="onMultiBlockVehicleChange('${b.id}',this.value)" style="flex:1;${INP};padding:4px 6px;font-size:12px">${opts}</select>`;
+      vehicleSel=`<select onchange="onMultiBlockVehicleChange('${b.id}',this.value)" style="flex:1;${INP};padding:4px 6px;font-size:12px">${opts}</select>${!vidFound&&b.label?`<span style="font-size:10px;color:#888;margin-left:4px">${b.label}</span>`:''}`;
     }else{
       vehicleSel=`<input value="${(b.label||'').replace(/"/g,'&quot;')}" placeholder="車両名・ナンバー等" style="flex:1;${INP};padding:4px 8px;font-size:12px" oninput="upMultiBlock('${b.id}','label',this.value)">`;
     }
@@ -1060,8 +1061,6 @@ function onMultiBlockVehicleChange(bid,vid){
 function addMultiItemFromMaster(bid,name,price){
   const b=multiVehicleBlocks.find(b=>b.id===bid);if(!b)return;
   b.items.push({id:uid(),name,qty:1,price});
-  const el=document.getElementById('mpicker_'+bid);if(el)el.style.display='none';
-  multiPickerOpenId=null;
   renderMultiBlocks();
 }
 function calcMultiTotals(){
@@ -1080,11 +1079,11 @@ function updateMultiDocNo(){
 function saveMultiQuote(){
   const cid=document.getElementById('mCid').value;
   if(!cid){showToast('顧客を選択してください');return;}
-  const hasItems=multiVehicleBlocks.some(b=>b.items.some(i=>i.name));
+  const hasItems=multiVehicleBlocks.some(b=>b.items.some(i=>i.name||i.price>0));
   if(!hasItems){showToast('少なくとも1つ品目を入力してください');return;}
   const subtotal=multiVehicleBlocks.reduce((s,b)=>s+b.items.reduce((ss,i)=>ss+(i.price||0)*(i.qty||1),0),0);
   const tax=Math.round(subtotal*0.1);const now=new Date().toISOString();
-  const q={id:editingMultiId||uid(),multi:true,customer_id:cid,doc_date:document.getElementById('mDate').value,doc_no:document.getElementById('mDocNo').value,cat_code:document.getElementById('mCatCode').value,note:document.getElementById('mNote').value,vehicles:multiVehicleBlocks.map(b=>({id:b.id,label:b.label,items:b.items.map(i=>({...i}))})),subtotal,tax,grand_total:subtotal+tax,created:editingMultiId?(quotes.find(x=>x.id===editingMultiId)||{}).created||now:now,updated:now};
+  const q={id:editingMultiId||uid(),multi:true,customer_id:cid,doc_date:document.getElementById('mDate').value,doc_no:document.getElementById('mDocNo').value,cat_code:document.getElementById('mCatCode').value,note:document.getElementById('mNote').value,vehicles:multiVehicleBlocks.map(b=>({id:b.id,label:b.label,vehicleId:b.vehicleId||null,items:b.items.filter(i=>i.name||i.price).map(i=>({...i}))})),subtotal,tax,grand_total:subtotal+tax,created:editingMultiId?(quotes.find(x=>x.id===editingMultiId)||{}).created||now:now,updated:now};
   if(editingMultiId){quotes=quotes.map(x=>x.id===editingMultiId?q:x);}else{quotes.unshift(q);}
   saveQ();renderMultiList();document.getElementById('multiFormWrap').style.display='none';editingMultiId=null;showToast('保存しました');
 }
