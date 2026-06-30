@@ -125,7 +125,7 @@ function editPriceItem(name,price){const ov=laborPriceOverrides[name];const cur=
 function hidePriceItem(name){if(!confirm(`「${name}」を非表示にします。マスター設定から再表示できます。`))return;const cat=laborMasterCat;if(!laborHidden[cat])laborHidden[cat]=[];if(!laborHidden[cat].includes(name))laborHidden[cat].push(name);saveM();renderMaster();showToast(name+' を非表示にしました')}
 function restorePriceItem(name){const cat=laborMasterCat;if(!laborHidden[cat])return;laborHidden[cat]=laborHidden[cat].filter(n=>n!==name);saveM();renderMaster();showToast(name+' を表示に戻しました')}
 function movePriceItem(name,sec,dir){const cat=laborMasterCat;if(!laborOrder[cat])laborOrder[cat]={};if(!laborOrder[cat][sec]){const hidden=new Set((laborHidden[cat])||[]);const pl=((PRICE_LIST[cat]||{})[sec]||[]);laborOrder[cat][sec]=pl.filter(x=>!hidden.has(x.n)).map(x=>x.n)}const arr=laborOrder[cat][sec];const i=arr.indexOf(name);if(i===-1){arr.push(name)}const i2=arr.indexOf(name);const j=i2+dir;if(j<0||j>=arr.length)return;[arr[i2],arr[j]]=[arr[j],arr[i2]];saveM();renderMaster()}
-function savePriceOverride(){const price=parseFloat(document.getElementById("plEditPrice").value)||0;const name=editingPriceOverrideName;if(!laborPriceOverrides[name])laborPriceOverrides[name]={};laborPriceOverrides[name][laborMasterCat]=price;const catLabels={kei:'軽',normal:'普通',kamotsu:'貨物',tire:'タイヤ'};const others=['kei','normal','kamotsu','tire'].filter(c=>c!==laborMasterCat);const othersLabel=others.map(c=>catLabels[c]).join('・');if(confirm(`他のカテゴリ（${othersLabel}）も¥${price.toLocaleString()}に統一しますか？\nキャンセルで${catLabels[laborMasterCat]}のみ変更します。`)){others.forEach(c=>{laborPriceOverrides[name][c]=price})}document.getElementById("plEditWrap").style.display="none";editingPriceOverrideName=null;saveM();renderMaster();showToast("価格を更新しました ✓")}
+function savePriceOverride(){const price=parseFloat(document.getElementById("plEditPrice").value)||0;const name=editingPriceOverrideName;if(!laborPriceOverrides[name])laborPriceOverrides[name]={};laborPriceOverrides[name][laborMasterCat]=price;const catLabels={kei:'軽',normal:'普通',kamotsu:'貨物',tire:'タイヤ',insurance:'ロード・保険'};const others=['kei','normal','kamotsu','tire'].filter(c=>c!==laborMasterCat&&laborMasterCat!=='insurance');const othersLabel=others.map(c=>catLabels[c]).join('・');if(confirm(`他のカテゴリ（${othersLabel}）も¥${price.toLocaleString()}に統一しますか？\nキャンセルで${catLabels[laborMasterCat]}のみ変更します。`)){others.forEach(c=>{laborPriceOverrides[name][c]=price})}document.getElementById("plEditWrap").style.display="none";editingPriceOverrideName=null;saveM();renderMaster();showToast("価格を更新しました ✓")}
 function cancelPriceEdit(){document.getElementById("plEditWrap").style.display="none";editingPriceOverrideName=null}
 function delL(id){laborLines=laborLines.filter(l=>l.id!==id);renderLaborLines()}
 function upL(id,k,v){const l=laborLines.find(x=>x.id===id);if(l)l[k]=k==="name"?v:parseFloat(v)||0;calcTotals()}
@@ -436,7 +436,7 @@ function addPartMaster(){const name=document.getElementById("pmName").value.trim
 function editPartMaster(id){const p=partsMaster.find(x=>x.id===id);if(!p)return;editingPartMasterId=id;document.getElementById("pmName").value=p.name;document.getElementById("pmCost").value=p.cost;document.getElementById("pmMargin").value=p.margin;document.getElementById("pmPrice").value=p.fixedPrice||"";document.getElementById("pmAddBtn").textContent="変更を保存";document.getElementById("pmName").focus()}
 function delPartMaster(id){if(!confirm("削除しますか？"))return;partsMaster=partsMaster.filter(x=>x.id!==id);saveM();renderMaster()}
 function movePartMaster(id,dir){const i=partsMaster.findIndex(x=>x.id===id);const j=i+dir;if(j<0||j>=partsMaster.length)return;[partsMaster[i],partsMaster[j]]=[partsMaster[j],partsMaster[i]];saveM();renderMaster()}
-function addLaborMaster(){const name=document.getElementById("lmName").value.trim();const hours=parseFloat(document.getElementById("lmHours").value)||0;const fixedPrice=parseFloat(document.getElementById("lmPrice").value)||null;const _lmSec=document.getElementById("lmSection").value;const section=_lmSec==="__new__"?(document.getElementById("lmSectionNew").value.trim()||"カスタム"):(_lmSec||"カスタム");if(!name){alert("作業名は必須です");return}const isEdit=!!editingLaborMasterId;if(isEdit){laborMaster=laborMaster.map(l=>l.id===editingLaborMasterId?{...l,name,hours,fixedPrice,cat:laborMasterCat,section}:l);editingLaborMasterId=null}else{laborMaster.push({id:uid(),name,hours,fixedPrice,cat:laborMasterCat,section})}const catLabels={kei:'軽',normal:'普通',kamotsu:'貨物',tire:'タイヤ'};const others=['kei','normal','kamotsu','tire'].filter(c=>c!==laborMasterCat);const othersLabel=others.map(c=>catLabels[c]).join('・');const confirmMsg=isEdit?`他のカテゴリ（${othersLabel}）の「${name}」も同じ内容に更新しますか？\nキャンセルで${catLabels[laborMasterCat]}のみ更新します。`:`他のカテゴリ（${othersLabel}）にも「${name}」を同じ内容で追加しますか？\nキャンセルで${catLabels[laborMasterCat]}のみ登録します。`;if(confirm(confirmMsg)){others.forEach(c=>{const ex=laborMaster.find(l=>l.cat===c&&l.name===name);if(ex){laborMaster=laborMaster.map(l=>l.cat===c&&l.name===name?{...l,name,hours,fixedPrice,section}:l)}else{laborMaster.push({id:uid(),name,hours,fixedPrice,cat:c,section})}})}saveM();cancelLmForm();renderMaster();showToast(isEdit?name+' を更新しました ✓':name+' を登録しました ✓')}
+function addLaborMaster(){const name=document.getElementById("lmName").value.trim();const hours=parseFloat(document.getElementById("lmHours").value)||0;const fixedPrice=parseFloat(document.getElementById("lmPrice").value)||null;const _lmSec=document.getElementById("lmSection").value;const section=_lmSec==="__new__"?(document.getElementById("lmSectionNew").value.trim()||"カスタム"):(_lmSec||"カスタム");if(!name){alert("作業名は必須です");return}const isEdit=!!editingLaborMasterId;if(isEdit){laborMaster=laborMaster.map(l=>l.id===editingLaborMasterId?{...l,name,hours,fixedPrice,cat:laborMasterCat,section}:l);editingLaborMasterId=null}else{laborMaster.push({id:uid(),name,hours,fixedPrice,cat:laborMasterCat,section})}const catLabels={kei:'軽',normal:'普通',kamotsu:'貨物',tire:'タイヤ',insurance:'ロード・保険'};const others=['kei','normal','kamotsu','tire'].filter(c=>c!==laborMasterCat&&laborMasterCat!=='insurance');const othersLabel=others.map(c=>catLabels[c]).join('・');const confirmMsg=isEdit?`他のカテゴリ（${othersLabel}）の「${name}」も同じ内容に更新しますか？\nキャンセルで${catLabels[laborMasterCat]}のみ更新します。`:`他のカテゴリ（${othersLabel}）にも「${name}」を同じ内容で追加しますか？\nキャンセルで${catLabels[laborMasterCat]}のみ登録します。`;if(confirm(confirmMsg)){others.forEach(c=>{const ex=laborMaster.find(l=>l.cat===c&&l.name===name);if(ex){laborMaster=laborMaster.map(l=>l.cat===c&&l.name===name?{...l,name,hours,fixedPrice,section}:l)}else{laborMaster.push({id:uid(),name,hours,fixedPrice,cat:c,section})}})}saveM();cancelLmForm();renderMaster();showToast(isEdit?name+' を更新しました ✓':name+' を登録しました ✓')}
 function editLaborMaster(id){const l=laborMaster.find(x=>x.id===id);if(!l)return;editingLaborMasterId=id;document.getElementById("lmName").value=l.name;document.getElementById("lmHours").value=l.hours||"";document.getElementById("lmPrice").value=l.fixedPrice||"";document.getElementById("lmSection").value=l.section||"";document.getElementById("lmAddBtn").textContent="変更を保存";document.getElementById("lmFormWrap").style.display="block";if(l.cat)setLaborMasterCat(l.cat);updateLmSectionOptions(l.section||'カスタム');setTimeout(()=>document.getElementById("lmFormWrap").scrollIntoView({behavior:'smooth',block:'start'}),50);document.getElementById("lmName").focus()}
 function delLaborMaster(id){if(!confirm("削除しますか？"))return;laborMaster=laborMaster.filter(x=>x.id!==id);saveM();renderMaster()}
 function moveLaborMaster(id,dir){const item=laborMaster.find(x=>x.id===id);if(!item)return;moveItem(laborMasterCat,item.section||'カスタム','cu:'+id,dir)}
@@ -505,7 +505,7 @@ function filterPicker(type){
   }else{
     const formCat=document.getElementById("lCat").value||"normal";
     const cat=laborPickerCat||formCat;
-    const catLabels={normal:"普通",kei:"軽",kamotsu:"貨物",tire:"タイヤ"};
+    const catLabels={normal:"普通",kei:"軽",kamotsu:"貨物",tire:"タイヤ",insurance:"ロード・保険"};
     const catTabsEl=document.getElementById("laborPickerCatTabs");
     if(catTabsEl){catTabsEl.innerHTML=Object.entries(catLabels).map(([k,lbl])=>`<button onclick="laborPickerCat='${k}';laborPickerSection=null;filterPicker('labor')" style="border:1px solid rgba(45,140,181,.3);background:${cat===k?'var(--B)':'#fff'};color:${cat===k?'#fff':'var(--B)'};border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;font-family:inherit;flex:1">${lbl}</button>`).join("")}
     const sections=PRICE_LIST[cat]||{};
@@ -672,6 +672,44 @@ const PRICE_LIST={
     'オプション':[
       {n:'ゴムバルブ交換',p:500,u:'/本'},{n:'金属バルブ・バルブコア交換',p:1000,u:'/本'},
       {n:'廃タイヤ処分',p:500,u:'/本'},{n:'タイヤ脱着のみ',p:1000,u:'/本'},{n:'ホイール洗浄',p:500,u:'/本'}
+    ]
+  },
+  insurance:{
+    '基本料金':[
+      {n:'出動基本料金（20kmまで）',p:15000},
+      {n:'出張追加料金（20km超）',p:500,u:'/km'},
+      {n:'空車回送料（20kmまで）',p:10000},
+      {n:'空車回送追加料金（20km超）',p:500,u:'/km'},
+      {n:'積載車搬送（10kmまで）',p:20000},
+      {n:'搬送追加料金（10km超）',p:700,u:'/km'},
+      {n:'高速道路・有料道路料金（実費）',p:0},
+      {n:'夜間・休日対応加算',p:5000},
+      {n:'深夜対応加算（22:00～6:00）',p:10000}
+    ],
+    '現場対応・応急作業':[
+      {n:'現場診断',p:10000},
+      {n:'バッテリージャンプスタート',p:8000},
+      {n:'パンク修理（現場）',p:8000},
+      {n:'スペアタイヤ交換',p:6000},
+      {n:'現場タイヤ交換',p:8000},
+      {n:'オイル漏れ点検',p:12000},
+      {n:'クーラント漏れ点検',p:12000},
+      {n:'エンジンオイル補充',p:3000},
+      {n:'クーラント補充',p:3000},
+      {n:'応急修理',p:8000}
+    ],
+    '事故対応':[
+      {n:'事故車積込み',p:10000},
+      {n:'事故車引上げ',p:20000},
+      {n:'ウインチ作業',p:10000},
+      {n:'落輪・引出し作業',p:20000},
+      {n:'保管料',p:3000,u:'/日'},
+      {n:'修理見積書作成',p:3000},
+      {n:'保険会社対応・写真撮影・書類作成',p:5000}
+    ],
+    'その他':[
+      {n:'納車・引取',p:5000},
+      {n:'廃車手続き',p:15000}
     ]
   }
 };
@@ -1022,7 +1060,7 @@ function filterGP(type){
     return;
   }
   const kw=(document.getElementById('gpLabSearch').value||'').toLowerCase();
-  const catLabels={normal:'普通',kei:'軽',kamotsu:'貨物',tire:'タイヤ'};
+  const catLabels={normal:'普通',kei:'軽',kamotsu:'貨物',tire:'タイヤ',insurance:'ロード・保険'};
   const catTabsEl=document.getElementById('gpLabCatTabs');
   const secTabsEl=document.getElementById('gpLabSecTabs');
   const listEl=document.getElementById('gpLabList');
