@@ -1,39 +1,17 @@
-export default function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Cache-Control', 'public, s-maxage=2592000, stale-while-revalidate=86400');
+import { FALLBACK_RATES, getStoredRates } from './_ratesData.js';
 
-  // 法定費用 料率表（料率改定時はここを更新する）
-  // 自賠責: 2023年4月改定 現行料率 / 重量税: エコカー以外 継続検査1年分 / 検査料: 2026年4月改定 持込み
-  // bike250=小型二輪251cc↑(車検あり) / bike125=軽二輪126-250cc(車検なし)
+// 法定費用 料率表 配信API
+// 通常は api/update-rates.js が月次でFirestoreに保存したAI確認済みの値を返す。
+// Firestoreに値が無い/取得失敗した場合はハードコードのフォールバック値を返す。
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800');
+
+  const stored = await getStoredRates();
+  const rates = stored?.rates || FALLBACK_RATES;
+
   res.status(200).json({
-    jibaiseki: {
-      normal:  { 12: 11500, 13: 12010, 24: 17650, 25: 18160 },
-      kei:     { 12: 11440, 13: 11950, 24: 17540, 25: 18040 },
-      kamotsu_small:   { 12: 13410, 13: 14080, 24: 20340, 25: 20950 },
-      kamotsu_2t:      { 12: 18740, 13: 19530, 24: 29300, 25: 29860 },
-      kamotsu_2t_over: { 12: 23890, 13: 24790, 24: 39260, 25: 39970 },
-      bike250: { 12: 7010, 13: 7150, 24: 8760, 25: 8910 },
-      bike125: { 12: 7100, 24: 8920 }
-    },
-    juryozei_per_year: {
-      // 自家用乗用車 エコカー以外 継続検査1年分（0.5tごと）
-      normal: {
-        standard: { "0.5": 4100, "1.0": 8200,  "1.5": 12300, "2.0": 16400, "2.5": 20500, "3.0": 24600 },
-        over13:   { "0.5": 5700, "1.0": 11400, "1.5": 17100, "2.0": 22800, "2.5": 28500, "3.0": 34200 },
-        over18:   { "0.5": 7500, "1.0": 15000, "1.5": 22500, "2.0": 30000, "2.5": 37500, "3.0": 45000 }
-      },
-      // 軽自動車 エコカー以外 継続検査1年分
-      kei: { standard: 3300, over13: 4100, over18: 4400 },
-      // 自家用普通貨物 エコカー以外 継続検査1年分（車両総重量ごと）2026年5月改定
-      kamotsu: {
-        standard: { "1.0": 3300, "2.0": 6600,  "2.5": 9900,  "3.0": 12300, "4.0": 16400, "5.0": 20500, "6.0": 24600, "7.0": 28700, "8.0": 32800 },
-        over13:   { "1.0": 4100, "2.0": 8200,  "2.5": 12300, "3.0": 17100, "4.0": 22800, "5.0": 28500, "6.0": 34200, "7.0": 39900, "8.0": 45600 },
-        over18:   { "1.0": 4400, "2.0": 8800,  "2.5": 13200, "3.0": 18900, "4.0": 25200, "5.0": 31500, "6.0": 37800, "7.0": 44100, "8.0": 50400 }
-      },
-      bike250: { standard: 3800, over13: 4600, over18: 5000 }
-    },
-    kensa_tesuryo: { normal_3: 2600, normal_5: 2500, kei: 2500, bike250: 1700,
-      chukoshinki_3: 2900, chukoshinki_5: 2800, chukoshinki_kei: 2800 },
-    fetched_at: new Date().toISOString()
+    ...rates,
+    fetched_at: stored?.updatedAt || new Date().toISOString()
   });
 }
