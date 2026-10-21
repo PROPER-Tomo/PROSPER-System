@@ -497,7 +497,7 @@ function renderMaster(){
   }
 }
 let laborPickerSection=null;let laborPickerCat=null;
-function togglePicker(id){const el=document.getElementById(id);if(!el)return;const show=el.style.display==="none";el.style.display=show?"block":"none";if(show){if(id==="laborPicker"){laborPickerSection=null;laborPickerCat=null;}filterPicker(id==="partPicker"?"part":"labor");setTimeout(()=>{const inp=document.getElementById(id==="partPicker"?"partPickerSearch":"laborPickerSearch");if(inp){inp.value="";inp.focus()}},50)}}
+function togglePicker(id){const el=document.getElementById(id);if(!el)return;const show=el.style.display==="none";el.style.display=show?"block":"none";if(show){if(id==="laborPicker"){laborPickerSection=null;}filterPicker(id==="partPicker"?"part":"labor");setTimeout(()=>{const inp=document.getElementById(id==="partPicker"?"partPickerSearch":"laborPickerSearch");if(inp){inp.value="";inp.focus()}},50)}}
 function filterPicker(type){
   const isPart=type==="part";
   const kw=(document.getElementById(isPart?"partPickerSearch":"laborPickerSearch").value||"").toLowerCase();
