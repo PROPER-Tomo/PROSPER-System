@@ -49,7 +49,7 @@ export default async function handler(req, res) {
             fileContent,
             {
               type: 'text',
-              text: 'この車検証（自動車検査証）を読み取り、以下のJSON形式のみを返してください。前置き・説明・マークダウン・コードブロック（```）は一切不要です。JSONオブジェクトだけを出力してください。\n{"owner_name":"","owner_address":"","user_name":"","user_address":"","plate":"","model":"","chassis_no":"","first_reg":"","expiry":"","year":0,"displacement":0,"weight":0}\n\nルール:\n- user_name=使用者欄、owner_name=所有者欄（使用者欄がなければowner_nameと同値）\n- year=初度登録年月を西暦年（整数）\n- expiry=有効期間満了日をYYYY-MM-DD形式\n- first_reg=初度登録年月をYYYY-MM-DD形式\n- displacement=総排気量をcc整数（最大積載量・車両総重量と混同厳禁）\n- weight=車両重量kg整数'
+              text: 'この車検証（自動車検査証、または自動車検査証記録事項の書面）を読み取り、以下のJSON形式のみを返してください。前置き・説明・マークダウン・コードブロック（```）は一切不要です。JSONオブジェクトだけを出力してください。\n{"owner_name":"","owner_address":"","user_name":"","user_address":"","plate":"","model":"","chassis_no":"","first_reg":"","expiry":"","year":0,"displacement":0,"weight":0}\n\nルール:\n- chassis_no（車台番号）は最重要項目。「車台番号」というラベルの右または下に印字されている英数字（通常10〜17文字程度、ハイフンを含むことがある）を一字一句正確にそのまま書き出す。他の項目（ナンバー・型式等）が読み取れているなら車台番号欄も必ず書面上に存在する。空欄を返してよいのは、画像内に「車台番号」の記載が本当に一切存在しない場合のみ。読み取りに自信が持てない・文字が小さい・かすれている等の理由だけで空欄にすることは禁止。可能な限り推測せず、見えている文字をそのまま書き出すこと。\n- user_name=使用者欄、owner_name=所有者欄（使用者欄がなければowner_nameと同値）\n- year=初度登録年月を西暦年（整数）\n- expiry=有効期間満了日をYYYY-MM-DD形式\n- first_reg=初度登録年月をYYYY-MM-DD形式\n- displacement=総排気量をcc整数（最大積載量・車両総重量と混同厳禁）\n- weight=車両重量kg整数\n- 電子車検証で車台番号の一部がアスタリスク（*）等で伏字表記されている場合は、その伏字を含めて印字されている通りに返す（伏字を理由に空欄にしない）。'
             }
           ]
         }]
