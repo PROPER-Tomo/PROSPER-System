@@ -86,23 +86,24 @@ function applyOCR(r){
   if(r.weight)document.getElementById("qWeight").value=r.weight;
   if(r.expiry)document.getElementById("qExpiry").value=r.expiry;
   if(r.chassis_no)document.getElementById("qChassis").value=r.chassis_no;
+  const chassisDebug=" [DEBUG 車台番号生データ="+JSON.stringify(r.chassis_no)+"]";
   if(r.owner_name){
     const name=r.owner_name.replace(/\s/g,"");
     const match=customers.find(c=>c.name.replace(/\s/g,"").includes(name)||name.includes(c.name.replace(/\s/g,"")));
     if(match){
       document.getElementById("qCid").value=match.id;
       onCustChange();
-      document.getElementById("ocrOK").textContent="✓ 読み取り完了。既存顧客「"+match.name+"」を選択しました。";
+      document.getElementById("ocrOK").textContent="✓ 読み取り完了。既存顧客「"+match.name+"」を選択しました。"+chassisDebug;
     }else{
       document.getElementById("newCustName").value=r.owner_name;
       document.getElementById("newCustAddr").value=r.owner_address||"";
       document.getElementById("newCustPhone").value="";
       document.getElementById("inlineCust").style.display="block";
-      document.getElementById("ocrOK").textContent="✓ 読み取り完了。所有者が未登録のため登録を促しています。";
+      document.getElementById("ocrOK").textContent="✓ 読み取り完了。所有者が未登録のため登録を促しています。"+chassisDebug;
     }
     document.getElementById("ocrOK").style.display="block";
   }else{
-    document.getElementById("ocrOK").textContent="✓ 車両情報を読み取りました。確認してください。";
+    document.getElementById("ocrOK").textContent="✓ 車両情報を読み取りました。確認してください。"+chassisDebug;
     document.getElementById("ocrOK").style.display="block";
   }
 }
