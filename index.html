@@ -413,7 +413,7 @@ async function handleOCRFile(file){
       if(match){
         document.getElementById("qCid").value=match.id;
         onCustChange();
-        document.getElementById("ocrOK").textContent="✓ 読み取り完了。既存顧客「"+match.name+"」を選択しました。 [DEBUG 車台番号生データ="+JSON.stringify(chassisNo)+"]";
+        document.getElementById("ocrOK").textContent="✓ 読み取り完了。既存顧客「"+match.name+"」を選択しました。";
       }else{
         document.getElementById("newCustName").value=useOwner?(j.owner_name||""):(j.user_name||"");
         document.getElementById("newCustAddr").value=effectiveAddr;
